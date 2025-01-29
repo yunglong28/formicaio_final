@@ -1,0 +1,12 @@
+{
+  "name": "formicaio_macte",
+  "version": "1.0.0",
+  "description": "Tale microservice e' strutturato al fine di presentate l'opera d'arte conversazionale dell'agent Formicaio sul sito di Macte.",
+  "main": "live_agent.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
