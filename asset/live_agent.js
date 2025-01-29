@@ -45,37 +45,44 @@ document.addEventListener('DOMContentLoaded', function () {
     menuAudio.loop = true;
     gameAudio.loop = true;
 
-    // Optimized Particle System Implementation
+    // Optimized Particle System Implementation  // Optimized Particle System Implementation
     class ParticleSystem {
-        constructor(canvas, options = {}) {
+        constructor(canvas) {
             this.canvas = canvas;
             this.ctx = canvas.getContext('2d', { alpha: false });
             this.ctx.imageSmoothingEnabled = false;
             
-            this.options = {
-                particleCount: options.particleCount || 20,
-                particleSize: options.particleSize || 2,
-                connectionDistance: options.connectionDistance || 15,
-                speed: options.speed || 0.2,
-                colors: options.colors || ['#90D64B', '#52fc3b', '#8F292B']
-            };
+            // Configuration
+            this.particleCount = 20;
+            this.particleSize = 2;
+            this.connectionDistance = 15;
+            this.speed = 0.2;
+            this.colors = ['#90D64B', '#52fc3b', '#8F292B'];
             
-            this.particles = new Float32Array(this.options.particleCount * 4);
-            this.particleColors = new Array(this.options.particleCount);
+            // Use TypedArrays for better performance
+            this.particles = new Float32Array(this.particleCount * 4); // x, y, velocityX, velocityY
+            this.particleColors = new Array(this.particleCount);
+            
+            // Performance optimization
             this.frameCount = 0;
+            this.lastTime = 0;
+            this.connDistSq = this.connectionDistance * this.connectionDistance;
             
             this.resize();
             this.init();
         }
 
         init() {
-            for (let i = 0; i < this.options.particleCount; i++) {
+            for (let i = 0; i < this.particleCount; i++) {
                 const baseIndex = i * 4;
+                // Position
                 this.particles[baseIndex] = Math.random() * this.canvas.width;
                 this.particles[baseIndex + 1] = Math.random() * this.canvas.height;
-                this.particles[baseIndex + 2] = (Math.random() > 0.5 ? 1 : -1) * this.options.speed;
-                this.particles[baseIndex + 3] = (Math.random() > 0.5 ? 1 : -1) * this.options.speed;
-                this.particleColors[i] = this.options.colors[Math.floor(Math.random() * this.options.colors.length)];
+                // Velocity
+                this.particles[baseIndex + 2] = (Math.random() > 0.5 ? 1 : -1) * this.speed;
+                this.particles[baseIndex + 3] = (Math.random() > 0.5 ? 1 : -1) * this.speed;
+                // Color
+                this.particleColors[i] = this.colors[Math.floor(Math.random() * this.colors.length)];
             }
         }
 
@@ -86,15 +93,24 @@ document.addEventListener('DOMContentLoaded', function () {
             this.canvas.style.height = `${window.innerHeight}px`;
         }
 
-        update() {
-            const connDist = this.options.connectionDistance;
-            const connDistSq = connDist * connDist;
+        update(timestamp) {
+            // Time-based animation
+            const deltaTime = timestamp - this.lastTime || 0;
+            this.lastTime = timestamp;
 
-            for (let i = 0; i < this.options.particleCount; i++) {
+            // Clear with solid color (faster than clearRect)
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            // Batch particle updates
+            for (let i = 0; i < this.particleCount; i++) {
                 const baseIndex = i * 4;
-                this.particles[baseIndex] += this.particles[baseIndex + 2];
-                this.particles[baseIndex + 1] += this.particles[baseIndex + 3];
                 
+                // Update positions with delta time
+                this.particles[baseIndex] += this.particles[baseIndex + 2] * deltaTime * 0.06;
+                this.particles[baseIndex + 1] += this.particles[baseIndex + 3] * deltaTime * 0.06;
+                
+                // Screen wrapping
                 if (this.particles[baseIndex] < 0) this.particles[baseIndex] = this.canvas.width;
                 else if (this.particles[baseIndex] > this.canvas.width) this.particles[baseIndex] = 0;
                 
@@ -102,31 +118,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 else if (this.particles[baseIndex + 1] > this.canvas.height) this.particles[baseIndex + 1] = 0;
             }
 
-            this.ctx.fillStyle = '#000000';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-            for (let i = 0; i < this.options.particleCount; i++) {
+            // Draw particles and connections
+            for (let i = 0; i < this.particleCount; i++) {
                 const baseIndex = i * 4;
                 const x1 = this.particles[baseIndex];
                 const y1 = this.particles[baseIndex + 1];
 
+                // Draw particle
                 if (this.frameCount % 30 !== i % 30) {
                     this.ctx.fillStyle = this.particleColors[i];
                     this.ctx.fillRect(
                         Math.floor(x1),
                         Math.floor(y1),
-                        this.options.particleSize,
-                        this.options.particleSize
+                        this.particleSize,
+                        this.particleSize
                     );
                 }
 
-                for (let j = i + 1; j < this.options.particleCount; j++) {
+                // Draw connections
+                for (let j = i + 1; j < this.particleCount; j++) {
                     const baseIndex2 = j * 4;
                     const dx = x1 - this.particles[baseIndex2];
                     const dy = y1 - this.particles[baseIndex2 + 1];
                     const distSq = dx * dx + dy * dy;
 
-                    if (distSq < connDistSq) {
+                    if (distSq < this.connDistSq) {
                         this.ctx.beginPath();
                         this.ctx.moveTo(Math.floor(x1), Math.floor(y1));
                         this.ctx.lineTo(
@@ -139,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            // Scanline effect (optimized to run less frequently)
             if (this.frameCount % 2 === 0) {
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 for (let i = 0; i < this.canvas.height; i += 8) {
@@ -147,11 +164,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             this.frameCount++;
+            requestAnimationFrame(this.update.bind(this));
         }
 
-        animate() {
-            this.update();
-            requestAnimationFrame(() => this.animate());
+        start() {
+            requestAnimationFrame(this.update.bind(this));
         }
     }
 
@@ -171,20 +188,12 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     document.body.insertBefore(canvas, document.body.firstChild);
 
-    const particleSystem = new ParticleSystem(canvas, {
-        particleCount: 20,
-        particleSize: 2,
-        connectionDistance: 15,
-        speed: 0.2,
-        colors: ['#90D64B', '#52fc3b', '#8F292B']
-    });
-
-    particleSystem.animate();
+    const particleSystem = new ParticleSystem(canvas);
+    particleSystem.start();
 
     window.addEventListener('resize', () => {
         particleSystem.resize();
     });
-
     // Transition Overlay
     function createTransitionOverlay() {
         const overlay = document.createElement('div');
