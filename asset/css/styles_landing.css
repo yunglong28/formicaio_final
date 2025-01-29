@@ -89,13 +89,20 @@ html, body {
 }
 
 /* Buttons */
-.start-btn, .tutorial-btn {
+.buttons {
+    display: flex;
+    gap: clamp(8px, 1.5vw, 15px);
+    justify-content: center;
+    align-items: center;
+    margin: clamp(10px, 2vh, 20px) 0;
+}
+
+.start-btn, .tutorial-btn, .manual-btn {
     display: inline-block;
     border: 0.1rem solid #000;
     border-radius: 0.6rem;
     padding: clamp(0.5rem, 1vw, 0.8rem) clamp(1rem, 1.5vw, 1.4rem);
     filter: drop-shadow(0.3rem 0.3rem 0.4rem rgba(0, 0, 0, 0.15));
-    margin: 0 clamp(8px, 1.5vw, 15px);
     background: #9dd3a1;
     cursor: pointer;
     font-size: clamp(16px, 2vw, 24px);
@@ -105,13 +112,14 @@ html, body {
     line-height: 1.2;
     text-decoration: none;
     text-align: center;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     will-change: transform, background-color;
-    transform: translateZ(0);
 }
 
-.start-btn:hover, .tutorial-btn:hover {
+.manual-btn:hover {
     background: #7ab37e;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Sound control */
