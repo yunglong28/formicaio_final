@@ -82,10 +82,14 @@ html, body {
 }
 
 .description-text {
-    color: #ffffff;
-    filter: drop-shadow(0.3rem 0.3rem 0.4rem rgba(0, 0, 0, 0.15));
-    font-size: clamp(18px, 2vw, 24px);
-    text-shadow: 0 0 5px #90D64B;
+    
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #9dd3a1;
+    text-shadow: 1px 1px 2px #000000,
+                 1px 1px 2px #000000,
+                 1px 1px 2px #000000;
 }
 
 /* Buttons */
