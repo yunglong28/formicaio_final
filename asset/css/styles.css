@@ -15,7 +15,6 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'MxPlusCordataPPC400', monospace; /* Correct custom font family name */
     font-family: 'MxPlusCordataPPC400', monospace;
     display: flex;
     justify-content: center;
@@ -28,7 +27,6 @@ body {
     opacity: 0;
     animation: fadeIn 2s ease-in-out forwards;
     cursor: url('png/formicazza_moventina.png') 16 16, auto;
-    will-change: opacity;
 }
 
 #fadeOverlay {
@@ -176,6 +174,7 @@ body {
                  1px 1px 2px #000000,
                  1px 1px 2px #000000;
     animation: flicker 30s alternate;
+    will-change: opacity;
 }
 
 .image-box {

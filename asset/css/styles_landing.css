@@ -373,7 +373,7 @@ body::after {
         font-size: clamp(16px, 4vw, 20px);
     }
     
-    .start-btn, .tutorial-btn {
+    .start-btn, .tutorial-btn, .manual-btn {
         padding: 0.5rem 1rem;
         margin: 0 8px;
     }
@@ -390,13 +390,11 @@ body::after {
     }
 }
 
+/* Combine mobile breakpoints */
 @media screen and (max-width: 480px) {
-    .ant {
-        width: clamp(80px, 15vw, 150px);
-    }
-    
-    .formicaio-logo {
-        width: 80%;
+    .container, .ant, .formicaio-logo {
+        width: 90%;
+        padding: 8px;
     }
 }
 
