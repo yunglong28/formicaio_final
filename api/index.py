@@ -55,9 +55,12 @@ class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS, GET')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
+
+    def do_GET(self):
+        self._send_json({"status": "ok", "message": "Formicaio API is running. Use POST to chat."})
 
     def do_POST(self):
         try:
