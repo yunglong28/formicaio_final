@@ -273,10 +273,8 @@ document.addEventListener('DOMContentLoaded', function () {
         saveConversationHistory(history);
     }
 
-    // API endpoint - uses Vercel serverless or local Flask
-    const backendURL = window.location.hostname === 'localhost'
-        ? 'http://localhost:5000/api/chat'
-        : '/api/chat';
+    // API endpoint - uses Vercel serverless
+    const backendURL = '/api/chat';
 
     async function sendMessageToBackend(message) {
         try {
