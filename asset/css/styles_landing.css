@@ -17,10 +17,10 @@ html, body {
     border: 3px dotted #90D64B;
     box-shadow: 0 0 10px #90D64B;
     font-family: 'MxPlusCordataPPC400', monospace;
-    /* Enhanced layered background */
-    background: 
+    /* Enhanced layered background - optimized PNG */
+    background:
         linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
-        url("./png/tunnel-pattern.svg"),       
+        url("./png/tunnel-pattern.png"),
         radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(20,20,16,1) 45%, rgba(40,40,40,1) 100%);
     background-blend-mode: overlay, soft-light;
     background-size: 100% 100%, cover, 100% 100%;

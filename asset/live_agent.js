@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const soundButton = document.querySelector('.sound-btn');
     const volumeSlider = document.getElementById('volumeSlider');
     const chatBox = document.getElementById('chatBox');
-    const chatBoxInner = chatBox.querySelector('.chat-box-inner');
-    const cursor = document.getElementById('cursor');
+    const chatBoxInner = chatBox ? chatBox.querySelector('.chat-box-inner') : null;
     const fadeOverlay = document.getElementById('fadeOverlay');
     const background = document.querySelector('.background');
     const imageBox = document.getElementById('imageBox');
@@ -19,38 +18,72 @@ document.addEventListener('DOMContentLoaded', function () {
     const tutorialPanel = document.getElementById('tutorialPanel');
     const overlay = document.getElementById('overlay');
     const closeBtn = document.querySelector('.close-btn');
-    const skipButton = document.getElementById('skipButton');
 
-    // For Responsiveness
+    // Throttled resize handler for responsiveness
+    let resizeTimeout;
     function setVH() {
-        let vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        if (resizeTimeout) return;
+        resizeTimeout = setTimeout(() => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+            resizeTimeout = null;
+        }, 100);
     }
-    
-    window.addEventListener('load', setVH);
-    window.addEventListener('resize', setVH);
 
-    // Central image creation
+    window.addEventListener('load', setVH);
+    window.addEventListener('resize', setVH, { passive: true });
+
+    // Central image creation - using optimized PNG
     const centralImage = document.createElement('img');
-    centralImage.src = 'asset/css/png/formiche-fighe.svg'; // Updated path
+    centralImage.src = 'asset/css/png/formiche-fighe.png';
     centralImage.className = 'formiche-dodge';
+    centralImage.loading = 'lazy';
     document.body.appendChild(centralImage);
 
-    // Audio setup
-    const menuAudio = new Audio('asset/css/kinked_menu_fancy.mp3'); // Updated path
-    const gameAudio = new Audio('asset/css/kinked_game_(FANCY).mp3'); // Updated path
+    // Audio setup - lazy load game audio
+    const menuAudio = new Audio('asset/css/kinked_menu_fancy.mp3');
+    let gameAudio = null;
     let currentAudio = menuAudio;
     let isPlaying = false;
 
     menuAudio.loop = true;
-    gameAudio.loop = true;
+    menuAudio.preload = 'auto';
+
+    // Lazy load game audio when needed
+    function loadGameAudio() {
+        if (!gameAudio) {
+            gameAudio = new Audio('asset/css/kinked_game_(FANCY).mp3');
+            gameAudio.loop = true;
+            gameAudio.volume = currentAudio.volume;
+        }
+        return gameAudio;
+    }
+
+    // Preload dialogue images for smoother transitions
+    const dialogueImageMap = {
+        1: 'asset/css/png/slide-dialogo0.png',
+        3: 'asset/css/png/slide-dialogo1.png',
+        7: 'asset/css/png/slide-dialogo2.png',
+        10: 'asset/css/png/slide-dialogo3.png',
+        12: 'asset/css/png/slide-dialogo4.png',
+        15: 'asset/css/png/slide-dialogo5.png',
+        18: 'asset/css/png/slide-dialogo6.png'
+    };
+
+    // Preload images after a short delay
+    setTimeout(() => {
+        Object.values(dialogueImageMap).forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+    }, 2000);
 
     // Transition Overlay
     function createTransitionOverlay() {
-        const overlay = document.createElement('div');
-        overlay.className = 'transition-overlay';
-        document.body.appendChild(overlay);
-        return overlay;
+        const overlayEl = document.createElement('div');
+        overlayEl.className = 'transition-overlay';
+        document.body.appendChild(overlayEl);
+        return overlayEl;
     }
 
     // Loading Function
@@ -71,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const initialVolume = 0.5;
         volumeSlider.value = initialVolume;
         menuAudio.volume = initialVolume;
-        gameAudio.volume = initialVolume;
     }
 
     let inputCount = 0;
@@ -115,9 +147,9 @@ document.addEventListener('DOMContentLoaded', function () {
             soundButton.textContent = 'Sound Off';
         } else {
             if (!landingPage || landingPage.style.display === 'none') {
-                currentAudio = gameAudio;
+                currentAudio = loadGameAudio();
             }
-            
+
             currentAudio.play().catch(e => {
                 console.error('Playback failed:', e);
                 setTimeout(() => {
@@ -130,58 +162,49 @@ document.addEventListener('DOMContentLoaded', function () {
         isPlaying = !isPlaying;
     }
 
-    function switchAudio(newAudio) {
-        if (!newAudio || newAudio === currentAudio) return;
+    // Optimized audio fade using requestAnimationFrame
+    function fadeAudio(audio, targetVolume, duration, callback) {
+        const startVolume = audio.volume;
+        const startTime = performance.now();
 
-        const wasPlaying = isPlaying;
-        const currentVolume = currentAudio.volume;
-        
-        const fadeOut = setInterval(() => {
-            if (currentAudio.volume > 0.1) {
-                currentAudio.volume -= 0.1;
-            } else {
-                clearInterval(fadeOut);
-                currentAudio.pause();
-                currentAudio.volume = currentVolume;
-                
-                currentAudio = newAudio;
-                currentAudio.volume = 0;
-                
-                if (wasPlaying) {
-                    currentAudio.play().catch(e => console.error('Audio switch failed:', e));
-                    
-                    const fadeIn = setInterval(() => {
-                        if (currentAudio.volume < currentVolume - 0.1) {
-                            currentAudio.volume += 0.1;
-                        } else {
-                            currentAudio.volume = currentVolume;
-                            clearInterval(fadeIn);
-                        }
-                    }, 50);
-                }
+        function fade(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            audio.volume = startVolume + (targetVolume - startVolume) * progress;
+
+            if (progress < 1) {
+                requestAnimationFrame(fade);
+            } else if (callback) {
+                callback();
             }
-        }, 50);
+        }
+
+        requestAnimationFrame(fade);
     }
 
+    // Optimized typewriter - updates in chunks for better performance
     function handleDialogueTransition(messageElement, text) {
         const tl = gsap.timeline();
-        
+
         tl.from(messageElement, {
             opacity: 0,
             duration: 0.5,
             ease: "power2.inOut"
         });
-        
+
         const chars = text.split("");
+        const chunkSize = 3; // Update DOM every 3 characters instead of every 1
         let currentText = "";
-        
-        chars.forEach((char, index) => {
+
+        for (let i = 0; i < chars.length; i += chunkSize) {
+            const chunk = chars.slice(i, i + chunkSize).join("");
             tl.add(() => {
-                currentText += char;
+                currentText += chunk;
                 messageElement.innerHTML = currentText + '<span class="cursor-blink">|</span>';
-            }, index * 0.05);
-        });
-        
+            }, (i / chunkSize) * 0.12); // Adjusted timing for chunked updates
+        }
+
         tl.to(messageElement, {
             keyframes: [
                 { x: -2 },
@@ -192,14 +215,14 @@ document.addEventListener('DOMContentLoaded', function () {
             duration: 0.3,
             ease: "none"
         });
-        
+
         return tl;
     }
 
-    function typeWriter(text, element, i, fnCallback) {
+    function typeWriter(text, element, _unused, fnCallback) {
         const messageElement = document.createElement('div');
         element.appendChild(messageElement);
-        
+
         handleDialogueTransition(messageElement, text).then(() => {
             if (typeof fnCallback === 'function') {
                 setTimeout(fnCallback, 500);
@@ -209,10 +232,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fadeTransition(callback) {
         if (!chatBoxInner) return;
-        
+
         chatBoxInner.style.transition = 'opacity 0.5s';
         chatBoxInner.style.opacity = '0';
-        
+
         setTimeout(() => {
             chatBoxInner.innerHTML = '';
             chatBoxInner.style.opacity = '1';
@@ -220,40 +243,86 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 500);
     }
 
-    // Use this URL based on the hostname:
-    const backendURL = window.location.hostname === 'localhost'
-        ? 'http://localhost:5038'
-        : 'https://formicaio-99c83a293f10.herokuapp.com';
+    // Conversation memory management
+    const STORAGE_KEY = 'formicaio_conversation';
+    const MAX_HISTORY = 20; // Keep last 20 messages (10 exchanges)
 
-    // Use `backendURL` here in the fetch call
+    function getConversationHistory() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error('Error reading conversation history:', e);
+            return [];
+        }
+    }
+
+    function saveConversationHistory(history) {
+        try {
+            // Keep only last MAX_HISTORY messages
+            const trimmed = history.slice(-MAX_HISTORY);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        } catch (e) {
+            console.error('Error saving conversation history:', e);
+        }
+    }
+
+    function addToHistory(role, content) {
+        const history = getConversationHistory();
+        history.push({ role, content });
+        saveConversationHistory(history);
+    }
+
+    // API endpoint - uses Vercel serverless or local Flask
+    const backendURL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5038/ask'
+        : '/api/chat';
+
     async function sendMessageToBackend(message) {
         try {
-            const response = await fetch(`${backendURL}/ask`, {
+            // Get conversation history for context
+            const history = getConversationHistory();
+
+            const response = await fetch(backendURL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: message }),
+                body: JSON.stringify({
+                    message: message,
+                    history: history
+                }),
             });
+
             const data = await response.json();
+
+            if (data.error) {
+                console.error('API error:', data.error);
+                return "The neural connection is unstable... try again.";
+            }
+
+            // Save this exchange to history
+            addToHistory('user', message);
+            addToHistory('assistant', data.response);
+
             return data.response;
         } catch (error) {
             console.error('Error communicating with backend:', error);
-            return "Sorry, I couldn't process that.";
+            return "The signal from Formicaio fades... connection lost.";
         }
     }
 
     function handleUserInput() {
         if (!userInputField || !chatBoxInner) return;
-    
+
         centralImage.classList.add('visible');
-    
+
         async function processInput() {
             const userInput = userInputField.value.trim();
             if (userInput) {
                 const loadingIndicator = createLoadingIndicator();
                 loadingIndicator.classList.add('visible');
-    
+
                 inputCount++;
                 const userMessage = document.createElement('p');
                 chatBoxInner.appendChild(userMessage);
@@ -262,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const aiResponse = await sendMessageToBackend(userInput);
                     loadingIndicator.classList.remove('visible');
                     setTimeout(() => loadingIndicator.remove(), 300);
-                    
+
                     const aiMessage = document.createElement('p');
                     chatBoxInner.appendChild(aiMessage);
                     typeWriter(`Agent: ${aiResponse}`, aiMessage, 0, () => {
@@ -276,122 +345,61 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         }
-    
+
         userInputField.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 processInput();
             }
         });
-    
+
         sendButton.addEventListener('click', processInput);
     }
-    
+
+    // Consolidated image transition function
+    function transitionDialogueImage(newSrc) {
+        dialogImage.classList.add('fade-out');
+        setTimeout(() => {
+            dialogImage.src = newSrc;
+            dialogImage.classList.remove('fade-out');
+            dialogImage.classList.add('fade-in');
+        }, 500);
+        setTimeout(() => {
+            dialogImage.classList.remove('fade-in');
+        }, 1000);
+    }
+
     function handleInteraction(event) {
         if (isAnimating || currentMessageIndex >= messages.length) return;
         if (event.target.closest('#userInputBox')) return;
-        
-        const currentTime = new Date().getTime();
+
+        const currentTime = Date.now();
         if (currentTime - lastClickTime < clickDelay) {
             return;
         }
         lastClickTime = currentTime;
-        
+
         isAnimating = true;
         canClick = false;
-        
+
         fadeTransition(() => {
             const messageElement = document.createElement('div');
             chatBoxInner.appendChild(messageElement);
             typeWriter(messages[currentMessageIndex], messageElement, 0, function () {
                 if (chatBox) chatBox.classList.add('shake');
-                
+
                 setTimeout(() => {
                     if (chatBox) chatBox.classList.remove('shake');
 
+                    // Check if there's an image transition for this message index
                     if (currentMessageIndex === 1) {
                         imageBox.style.display = 'block';
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo0.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
-                    }
-                    if (currentMessageIndex === 3) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo1.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
                     }
 
-                    if (currentMessageIndex === 7) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo2.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
+                    const imageSrc = dialogueImageMap[currentMessageIndex];
+                    if (imageSrc) {
+                        transitionDialogueImage(imageSrc);
                     }
 
-                    if (currentMessageIndex === 10) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo3.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
-                    }
-
-                    if (currentMessageIndex === 12) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo4.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
-                    }
-
-                    if (currentMessageIndex === 15) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo5.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
-                    }
-
-                    if (currentMessageIndex === 18) {
-                        dialogImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            dialogImage.src = 'asset/css/png/slide-dialogo6.png';
-                            dialogImage.classList.remove('fade-out');
-                            dialogImage.classList.add('fade-in');
-                        }, 500);
-                        setTimeout(() => {
-                            dialogImage.classList.remove('fade-in');
-                        }, 1000);
-                    }
-                    
                     currentMessageIndex++;
                     isAnimating = false;
                     canClick = true;
@@ -409,12 +417,12 @@ document.addEventListener('DOMContentLoaded', function () {
             fadeOverlay.style.opacity = '0';
             fadeOverlay.style.transition = 'opacity 1s ease-in-out';
         }
-        
+
         if (background) {
             background.style.opacity = '0.8';
             background.style.transition = 'opacity 1s ease-in-out';
         }
-        
+
         if (imageBox) {
             imageBox.style.opacity = '0';
             imageBox.style.transition = 'opacity 1s ease-in-out';
@@ -422,12 +430,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 imageBox.style.display = 'none';
             }, 1000);
         }
-        
+
         if (chatBox) {
             chatBox.style.transition = 'width 0.5s ease-in-out, opacity 1s ease-in-out';
             chatBox.style.width = '100%';
         }
-        
+
         setTimeout(() => {
             if (chatBoxInner) chatBoxInner.innerHTML = '';
             if (userInputBox) {
@@ -471,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
             opacity: '0',
             transition: 'opacity 2s'
         });
-        
+
         finalMessageBox.innerHTML = "The connection vanishes, leaving behind only the echo of Agent's words." +
         "<br><br>" +
         "How did the conversation make you feel? Has your opinion on these issues shifted?" +
@@ -496,6 +504,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const transitionOverlay = createTransitionOverlay();
         transitionOverlay.classList.add('active');
 
+        // Preload game audio when starting
+        loadGameAudio();
+
         setTimeout(() => {
             landingPage.style.display = 'none';
             if (footer) {
@@ -503,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             chatbotSection.style.display = 'block';
             currentAudio = gameAudio;
-            
+
             if (fadeOverlay) {
                 fadeOverlay.style.background = 'none';
                 fadeOverlay.style.backgroundColor = 'transparent';
@@ -512,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 transitionOverlay.classList.remove('active');
                 setTimeout(() => transitionOverlay.remove(), 500);
-                
+
                 if (currentMessageIndex === 0) {
                     handleInteraction({ target: document.body });
                 }
@@ -529,6 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
         volumeSlider.addEventListener('input', (e) => {
             const volume = parseFloat(e.target.value);
             currentAudio.volume = volume;
+            if (gameAudio) gameAudio.volume = volume;
         });
     }
 
@@ -591,7 +603,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Click listener for dialogue progression
     document.addEventListener('click', function(event) {
-        if (canClick) handleInteraction(event);
+        // Only handle clicks when chatbot section is visible (not on landing page)
+        if (canClick && chatbotSection && getComputedStyle(chatbotSection).display !== 'none') {
+            handleInteraction(event);
+        }
     });
 });

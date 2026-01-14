@@ -93,9 +93,7 @@ body {
 
 
 
-.container:hover {
-    transform: scale(1.02);
-}
+/* Removed hover scale - causes layout shifts and hurts performance */
 
 .chat-box {
     position: relative;
@@ -134,7 +132,7 @@ body {
     text-shadow: 1px 1px 2px #000000,
                  1px 1px 2px #000000,
                  1px 1px 2px #000000;
-    animation: flicker 30s alternate;
+    animation: flicker 8s ease-in-out infinite;
 }
 
 .chat-box-inner::-webkit-scrollbar {
@@ -173,8 +171,7 @@ body {
     text-shadow: 1px 1px 2px #000000,
                  1px 1px 2px #000000,
                  1px 1px 2px #000000;
-    animation: flicker 30s alternate;
-    will-change: opacity;
+    /* Flicker animation inherited from parent - no duplicate animation */
 }
 
 .image-box {
@@ -363,12 +360,12 @@ body {
     pointer-events: none;
     z-index: -1;
     opacity: 0;
-    filter: contrast(1.2) brightness(1.5);
+    /* Removed expensive filter - using opacity in animation instead */
     transform: translate3d(-50%, -50%, 0) scale(1);
     left: 70%;
     top: 50%;
     mix-blend-mode: color-dodge;
-    animation: centralPulse 8s infinite alternate;
+    animation: centralPulse 10s ease-in-out infinite;
     will-change: transform, opacity;
 }
 
@@ -474,18 +471,17 @@ body {
     100% { transform: scale(1); opacity: 1; background-color: #D63D2E; }
 }
 
+/* Optimized pulsate - simplified shadows for better performance */
 @keyframes pulsate {
-    0% {
+    0%, 100% {
         background-color: #90D64B;
-        box-shadow: 0 0 5px #90D64B, 0 0 10px #90D64B, 0 0 15px #90D64B;
+        box-shadow: 0 0 8px #90D64B;
+        transform: scale(1);
     }
     50% {
-        background-color: rgba(144, 214, 75, 0.5);
-        box-shadow: 0 0 10px #90D64B, 0 0 20px #90D64B, 0 0 30px #90D64B;
-    }
-    100% {
-        background-color: #90D64B;
-        box-shadow: 0 0 5px #90D64B, 0 0 10px #90D64B, 0 0 15px #90D64B;
+        background-color: rgba(144, 214, 75, 0.7);
+        box-shadow: 0 0 15px #90D64B;
+        transform: scale(1.1);
     }
 }
 
@@ -499,42 +495,24 @@ body {
     100% { opacity: 0.5; }
 }
 
+/* Optimized flicker - reduced keyframes, shorter duration */
 @keyframes flicker {
-    0% { opacity: 1; }
-    5% { opacity: 0.5; }
-    10% { opacity: 1; }
-    15% { opacity: 0.8; }
-    20% { opacity: 0.6; }
-    25% { opacity: 1; }
-    30% { opacity: 0.7; }
-    35% { opacity: 1; }
-    40% { opacity: 0.9; }
-    45% { opacity: 1; }
-    50% { opacity: 0.5; }
-    55% { opacity: 1; }
+    0%, 100% { opacity: 1; }
+    20% { opacity: 0.85; }
+    40% { opacity: 0.95; }
     60% { opacity: 0.8; }
-    65% { opacity: 1; }
-    70% { opacity: 0.9; }
-    75% { opacity: 1; }
-    80% { opacity: 0.5; }
-    85% { opacity: 1; }
-    90% { opacity: 0.8; }
-    95% { opacity: 1; }
-    100% { opacity: 0.6; }
+    80% { opacity: 0.9; }
 }
 
+/* Optimized centralPulse - uses only transform (GPU accelerated) */
 @keyframes centralPulse {
-    0% {
-        filter: contrast(1.2) brightness(1.5);
-        transform: translate(-50%, -50%) scale(1);
+    0%, 100% {
+        transform: translate3d(-50%, -50%, 0) scale(1);
+        opacity: 0.9;
     }
     50% {
-        filter: contrast(1.4) brightness(1.7);
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    100% {
-        filter: contrast(1.2) brightness(1.5);
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate3d(-50%, -50%, 0) scale(1.08);
+        opacity: 1;
     }
 }
 

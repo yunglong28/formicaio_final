@@ -20,7 +20,7 @@
     <!-- CSS files for both landing page and chatbot -->
     <link rel="stylesheet" href="asset/css/styles_landing.css">
     <link rel="stylesheet" href="asset/css/styles.css">
-    <link rel="icon" href="asset/css/png/LOGO_favicon.svg" type="image/png">
+    <link rel="icon" href="asset/css/png/favicon.png" type="image/png">
 </head>
 <body>
     <!-- Landing Page Section -->
@@ -91,7 +91,7 @@
         <div id="fadeOverlay"></div>
         <div class="background"></div>
         <div class="image-box" id="imageBox" style="display: none;">
-            <img id="dialogImage" src="asset/css/png/slide-dialogo0.jpeg" alt="Slide 0">
+            <img id="dialogImage" src="asset/css/png/slide-dialogo0.png" alt="Slide 0">
         </div>
         <div class="chat-box" id="chatBox">
             <div class="chat-box-inner">
@@ -114,41 +114,8 @@
         <p class="footer_text">© 2025 FORMICAIO ALPHA VERSION - Licensed under CC BY-NC-SA 4.0</p>
     </footer>
 
-    <!-- JavaScript to toggle between sections -->
-    <script>
-        const startChatBtn = document.getElementById('startChatBtn');
-        const landingPage = document.getElementById('landingPage');
-        const chatbotSection = document.getElementById('chatbotSection');
-        
-        startChatBtn.addEventListener('click', function() {
-            landingPage.style.display = 'none';
-            chatbotSection.style.display = 'block';
-        });
-
-        // Tutorial panel functionality
-        const tutorialBtn = document.getElementById('tutorialBtn');
-        const tutorialPanel = document.getElementById('tutorialPanel');
-        const overlay = document.getElementById('overlay');
-        const closeBtn = document.querySelector('.close-btn');
-
-        tutorialBtn.addEventListener('click', function() {
-            tutorialPanel.style.display = 'block';
-            overlay.style.display = 'block';
-        });
-
-        closeBtn.addEventListener('click', function() {
-            tutorialPanel.style.display = 'none';
-            overlay.style.display = 'none';
-        });
-
-        overlay.addEventListener('click', function() {
-            tutorialPanel.style.display = 'none';
-            overlay.style.display = 'none';
-        });
-    </script>
-
-    <!-- Include the chatbot script -->
+    <!-- Include the chatbot script (handles all interactions) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="/asset/live_agent.js"></script>
+    <script src="asset/live_agent.js"></script>
 </body>
 </html>
