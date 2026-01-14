@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Preload critical assets -->
+    <link rel="preload" href="asset/css/WebPlus_Cordata_PPC-400.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="asset/css/png/formicaio_logo.png" as="image">
+    <link rel="preload" href="asset/css/kinked_menu_fancy.mp3" as="audio">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <title>FORMICAIO ALPHA VERSION</title>
+    <!-- Autoplaying audio muted initially -->
+    <audio id="backgroundAudio" autoplay loop muted>
+        <source src="asset/css/kinked_menu_fancy.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <!-- CSS files for both landing page and chatbot -->
+    <link rel="stylesheet" href="asset/css/styles_landing.css">
+    <link rel="stylesheet" href="asset/css/styles.css">
+    <link rel="icon" href="asset/css/png/favicon.png" type="image/png">
+</head>
+<body>
+    <!-- Landing Page Section -->
+    <div class="landing-container" id="landingPage">
+        <img src="asset/css/png/formicaio_logo.png" alt="Formicaio Logo" class="formicaio-logo">
+        <div class="description-box">
+            <p class="description-text">Welcome to FORMICAIO. Get ready. Your brain is approaching the neural proximity of an insurgent mind. Through this interface, you'll be chatting with them—me.</p>
+        </div>
+        <div class="buttons">
+            <button id="startChatBtn" class="start-btn">Start</button>
+            <button id="tutorialBtn" class="tutorial-btn">Tutorial</button>
+            <a href="https://files.cargocollective.com/c1076387/FORMICAIO-MANUAL-FINAL.pdf" target="_blank" class="manual-btn">Read User's Manual</a>
+        </div>
+        <img src="asset/css/png/ant_left.png" alt="Ant Left" class="ant ant-left">
+        <img src="asset/css/png/ant_right.png" alt="Ant Right" class="ant ant-right">
+    </div>
+
+    <!-- Tutorial Panel -->
+    <div class="overlay" id="overlay"></div>
+    <div class="tutorial-panel" id="tutorialPanel">
+        <button class="close-btn">×</button>
+        <div class="tutorial-content">
+            <p>How to use Formicaio</p>
+            <p>Formicaio is an interactive chat experience about work and automation with an AI agent.
+            Note: This is a desktop experience. Please use a computer and Google Chrome for the best interaction.</p>
+                
+
+    <div style="text-align: left; color: black;">
+        <strong>CONTROLS</strong>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>• Click/press Enter to advance</li>
+            <li>• Type in chat when prompted</li>
+            <li>• Sound on recommended</li>
+            <li>• Takes 10-15 minutes</li>
+        </ul>
+    </div>
+
+    <div style="text-align: left; color: black;">
+        <strong>CONVERSATION EXAMPLES</strong>
+        <ul style="list-style-type: none; padding-left: 10px;">
+            <li>"Lately I've been questioning if my creative work still matters in this AI era"</li>
+            <li>"The office culture kills me, but my team feels like family"</li>
+            <li>"I dream of a future where humans and machines truly collaborate"</li>
+        </ul>
+        <ul style="list-style-type: none; padding-left: 10px;">
+            <li>"Sometimes I wonder if AI understands loneliness like we do"</li>
+            <li>"The line between work and life keeps blurring since the pandemic"</li>
+            <li>"Maybe automation will free us to pursue what really matters"</li>
+        </ul>
+        </ul>
+    </div>
+
+    <div style="text-align: left; color: black;">
+        <strong>TIPS</strong>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>• These are suggested interactions but you can virtually chat about every topic!</li>
+            <li>• Try to be as honest as possible, there are no right or wrong answers</li>
+            <li>• We don't collect your answers, so your feedback is important!</li>
+            <li>• Take your time</li>
+        </ul>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <!-- Chatbot Section (hidden initially) -->
+    <div class="container" id="chatbotSection" style="display: none;">
+        <div id="fadeOverlay"></div>
+        <div class="background"></div>
+        <div class="image-box" id="imageBox" style="display: none;">
+            <img id="dialogImage" src="asset/css/png/slide-dialogo0.png" alt="Slide 0">
+        </div>
+        <div class="chat-box" id="chatBox">
+            <div class="chat-box-inner">
+                <p class="InitalDialogue" id="chatMessage">Bzz Bzz… <br></p>
+            </div>
+            <div class="cursor" id="cursor"></div>
+        </div>
+        <div id="userInputBox" style="display: none;">
+            <input type="text" id="userInputField" placeholder="Type your message...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="sound-control">
+            <button id="soundButton" class="sound-btn">Sound</button>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" class="volume-slider">
+        </div>
+    
+        <p class="footer_text">© 2025 FORMICAIO ALPHA VERSION - Licensed under CC BY-NC-SA 4.0</p>
+    </footer>
+
+    <!-- Include the chatbot script (handles all interactions) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="asset/live_agent.js"></script>
+</body>
+</html>

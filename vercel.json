@@ -1,27 +1,15 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
+  "buildCommand": "",
+  "outputDirectory": ".",
   "routes": [
     {
       "src": "/api/chat",
-      "dest": "/api/index"
+      "dest": "/api/index.py"
     },
     {
-      "src": "/asset/(.*)",
-      "dest": "/asset/$1"
-    },
-    {
-      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|svg|mp3|woff|ttf))",
+      "src": "/(.*)",
       "dest": "/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/formicaio_webpage.html"
     }
   ]
 }
