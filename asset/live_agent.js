@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // API endpoint - uses Vercel serverless or local Flask
     const backendURL = window.location.hostname === 'localhost'
         ? 'http://localhost:5038/ask'
-        : '/api/index';
+        : '/api/chat';
 
     async function sendMessageToBackend(message) {
         try {
