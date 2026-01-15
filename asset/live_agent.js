@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // API endpoint - uses Vercel serverless
-    const backendURL = '/api/chat';
+    const backendURL = '/api';
 
     async function sendMessageToBackend(message) {
         try {
