@@ -1,9 +1,7 @@
-from flask import Flask, request, jsonify
+from http.server import BaseHTTPRequestHandler
 import json
 import os
 import urllib.request
-
-app = Flask(__name__)
 
 # Groq API endpoint
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -56,70 +54,82 @@ RESPONSE FORMAT:
 - Better to give a shorter, complete response than a longer, cut-off one"""
 
 
-@app.route("/", methods=["GET", "POST", "OPTIONS"])
-def chat():
-    # Debug: check if env var is set
-    if request.method == "GET":
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
+    def do_GET(self):
+        # Debug endpoint
         groq_key = os.environ.get("GROQ_API_KEY", "")
         key_status = "SET" if groq_key and len(groq_key) > 10 else "EMPTY"
-        return jsonify({"env_status": key_status, "key_length": len(groq_key)})
-    # Handle CORS preflight
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        return response
 
-    try:
-        data = request.get_json()
-        user_message = data.get("message", "")
-        conversation_history = data.get("history", [])
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({"env_status": key_status, "key_length": len(groq_key)}).encode())
 
-        if not user_message:
-            return jsonify({"error": "No message provided"}), 400
+    def do_POST(self):
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode())
 
-        # Build messages array with history
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            user_message = data.get("message", "")
+            conversation_history = data.get("history", [])
 
-        # Add conversation history (last 10 exchanges to stay within context)
-        for entry in conversation_history[-20:]:
-            messages.append(entry)
+            if not user_message:
+                self.send_error_response(400, {"error": "No message provided"})
+                return
 
-        # Add current user message
-        messages.append({"role": "user", "content": user_message})
+            # Build messages array with history
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            for entry in conversation_history[-20:]:
+                messages.append(entry)
+            messages.append({"role": "user", "content": user_message})
 
-        # Call Groq API
-        groq_key = os.environ.get("GROQ_API_KEY", "")
+            # Call Groq API
+            groq_key = os.environ.get("GROQ_API_KEY", "")
 
-        req_data = json.dumps({
-            "model": "llama-3.3-70b-versatile",
-            "messages": messages,
-            "temperature": 0.85,
-            "max_tokens": 250,
-            "presence_penalty": 0.6,
-            "frequency_penalty": 0.7,
-            "stop": ["\n\n\n"]
-        }).encode()
+            req_data = json.dumps({
+                "model": "llama-3.3-70b-versatile",
+                "messages": messages,
+                "temperature": 0.85,
+                "max_tokens": 250,
+                "presence_penalty": 0.6,
+                "frequency_penalty": 0.7,
+                "stop": ["\n\n\n"]
+            }).encode()
 
-        req = urllib.request.Request(
-            GROQ_API_URL,
-            data=req_data,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {groq_key}"
-            }
-        )
+            req = urllib.request.Request(
+                GROQ_API_URL,
+                data=req_data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {groq_key}"
+                }
+            )
 
-        with urllib.request.urlopen(req, timeout=30) as response:
-            result = json.loads(response.read().decode())
-            ai_response = result["choices"][0]["message"]["content"].strip()
+            with urllib.request.urlopen(req, timeout=30) as response:
+                result = json.loads(response.read().decode())
+                ai_response = result["choices"][0]["message"]["content"].strip()
 
-        resp = jsonify({"response": ai_response})
-        resp.headers.add("Access-Control-Allow-Origin", "*")
-        return resp
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"response": ai_response}).encode())
 
-    except Exception as e:
-        resp = jsonify({"error": str(e)})
-        resp.headers.add("Access-Control-Allow-Origin", "*")
-        return resp, 500
+        except Exception as e:
+            self.send_error_response(500, {"error": str(e)})
+
+    def send_error_response(self, code, data):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
