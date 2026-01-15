@@ -56,7 +56,7 @@ RESPONSE FORMAT:
 - Better to give a shorter, complete response than a longer, cut-off one"""
 
 
-@app.route("/api/chat", methods=["POST", "OPTIONS"])
+@app.route("/", methods=["POST", "OPTIONS"])
 def chat():
     # Handle CORS preflight
     if request.method == "OPTIONS":
