@@ -56,8 +56,13 @@ RESPONSE FORMAT:
 - Better to give a shorter, complete response than a longer, cut-off one"""
 
 
-@app.route("/", methods=["POST", "OPTIONS"])
+@app.route("/", methods=["GET", "POST", "OPTIONS"])
 def chat():
+    # Debug: check if env var is set
+    if request.method == "GET":
+        groq_key = os.environ.get("GROQ_API_KEY", "")
+        key_status = "SET" if groq_key and len(groq_key) > 10 else "EMPTY"
+        return jsonify({"env_status": key_status, "key_length": len(groq_key)})
     # Handle CORS preflight
     if request.method == "OPTIONS":
         response = jsonify({})
