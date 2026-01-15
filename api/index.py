@@ -97,7 +97,7 @@ def chat():
         groq_key = os.environ.get("GROQ_API_KEY", "")
 
         req_data = json.dumps({
-            "model": "llama-3.3-70b-versatile",
+            "model": "llama-3.1-8b-instant",
             "messages": messages,
             "temperature": 0.85,
             "max_completion_tokens": 250
