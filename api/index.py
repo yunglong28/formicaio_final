@@ -100,10 +100,7 @@ def chat():
             "model": "llama-3.3-70b-versatile",
             "messages": messages,
             "temperature": 0.85,
-            "max_tokens": 250,
-            "presence_penalty": 0.6,
-            "frequency_penalty": 0.7,
-            "stop": ["\n\n\n"]
+            "max_completion_tokens": 250
         }).encode()
 
         req = urllib.request.Request(
