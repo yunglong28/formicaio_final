@@ -57,6 +57,8 @@ RESPONSE FORMAT:
 
 
 @app.route("/", methods=["GET", "POST", "OPTIONS"])
+@app.route("/api", methods=["GET", "POST", "OPTIONS"])
+@app.route("/api/", methods=["GET", "POST", "OPTIONS"])
 def chat():
     # Handle CORS preflight
     if request.method == "OPTIONS":
