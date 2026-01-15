@@ -72,7 +72,8 @@ def chat():
     if request.method == "GET":
         groq_key = os.environ.get("GROQ_API_KEY", "")
         key_status = "SET" if groq_key and len(groq_key) > 10 else "EMPTY"
-        return jsonify({"status": "ok", "env_status": key_status, "key_length": len(groq_key)})
+        key_preview = groq_key[:10] + "..." if len(groq_key) > 10 else groq_key
+        return jsonify({"status": "ok", "env_status": key_status, "key_length": len(groq_key), "key_preview": key_preview})
 
     try:
         data = request.get_json()
